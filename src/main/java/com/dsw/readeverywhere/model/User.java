@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 public class User{
     private String email;
     private String name;
+    private String usedSpace;
+    private String totalSpace;
     private String password;
 
     public String getEmail() {
@@ -13,6 +15,14 @@ public class User{
     }
     public String getName() {
         return name;
+    }
+
+    public String getUsedSpace() {
+        return usedSpace;
+    }
+
+    public String getTotalSpace() {
+        return totalSpace;
     }
 
     public String getPassword() {
@@ -25,6 +35,16 @@ public class User{
     }
     public User setEmail(String email) {
         this.email = email;
+        return this;
+    }
+
+    public User setUsedSpace(String usedSpace) {
+        this.usedSpace = usedSpace;
+        return this;
+    }
+
+    public User setTotalSpace(String totalSpace) {
+        this.totalSpace = totalSpace;
         return this;
     }
 

@@ -62,5 +62,13 @@ public class MySessionManager {
     public static void updateLastLoginTime(String email){
         JedisUtils.hset("user:"+email,"lastLoginTime",String.valueOf(System.currentTimeMillis()));
     }
+    public static long getFreeSpace(String email){
+        Jedis jedis = JedisUtils.getJedis();
+        long totalSpace = Long.parseLong(jedis.hget("user:"+email,"totalSpace"));
+        long usedSpace = Long.parseLong(jedis.hget("user:"+email,"usedSpace"));
+        jedis.close();
+        long freeSpace = totalSpace - usedSpace;
+        return freeSpace;
+    }
 
 }

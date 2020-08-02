@@ -63,7 +63,7 @@ public class RequestController {
             map.put("password",resMap.get("password"));
             map.put("signUpTime",resMap.get("signUpTime"));
             map.put("usedSpace","0");
-            map.put("totalSpace","20000");
+            map.put("totalSpace","20480");
             map.put("vip","0");
             map.put("lastLoginTime","0");
             jedis.hmset("user:"+email,map);
@@ -80,12 +80,17 @@ public class RequestController {
     @PostMapping("/signUp")
     public Map<String,Object> signUp(@RequestParam("email")String email,
                                     @RequestParam("name")String name,
-                                    @RequestParam("password")String password){
+                                    @RequestParam("password")String password,
+                                     @RequestParam("invCode")String invCode){
+        Map<String,Object> map = new HashMap();
+        if (!invCode.equals("dswtxdys")){
+            map.put("status","invCodeError");
+            return map;
+        }
         long time = System.currentTimeMillis();
         String timeString = String.valueOf(time);
         String activateString = email + timeString;
         String activateToken = DigestUtils.md5DigestAsHex(activateString.getBytes());
-        Map<String,Object> map = new HashMap();
 
         Jedis jedis = JedisUtils.getJedis();
         String activate = jedis.hget("signUpUser:"+email,"activate");
@@ -150,7 +155,8 @@ public class RequestController {
             String token = MySessionManager.generalToken(email);
             MySessionManager.updateLastLoginTime(email);
             map.put("status","true");
-            User user = new User().setEmail(email).setName(jedisMap.get("name"));
+            User user = new User().setEmail(email).setName(jedisMap.get("name"))
+                    .setUsedSpace(jedisMap.get("usedSpace")).setTotalSpace(jedisMap.get("totalSpace"));
             map.put("user",user);
             map.put("token",token);
             System.out.println("token "+token+" has created.");
@@ -223,7 +229,7 @@ public class RequestController {
             return "true";
         }
     }
-    @PostMapping("/uploadPdf")//还未检查空间是否允许上传
+    @PostMapping("/uploadPdf")
     public Object uploadPdf(@RequestHeader("token")String token,
                              @RequestParam("path")String path,
                              @RequestParam("file")MultipartFile file){
@@ -231,17 +237,40 @@ public class RequestController {
         String email = MySessionManager.tokenToEmail(token);
         if (email.equals("null")||email.equals("expired")){
             map.put("status",email);
+            return map;
+        }
+        long size = file.getSize() / 1024;
+        long freeSpace = MySessionManager.getFreeSpace(email);
+        if (size >= freeSpace){
+            map.put("status","noEnoughSpace");
         }
         else{
             String res = FileSystemManager.saveFile(email,path,file);
             if (res.equals("1")){
                 map.put("status","true");
-
             }
             else{
                 map.put("status","false");
             }
 
+        }
+        return map;
+    }
+    @PostMapping("/deletePdfOrDir")
+    public Object deletePdfOrDir(@RequestHeader("token")String token,
+                            @RequestParam("path")String path){
+        Map<String,Object> map = new HashMap();
+        String email = MySessionManager.tokenToEmail(token);
+        if (email.equals("null")||email.equals("expired")){
+            map.put("status",email);
+            return map;
+        }
+        String res = FileSystemManager.deleteFileOrDir(email,path);
+        if (res.equals("1")){
+            map.put("status","true");
+        }
+        else{
+            map.put("status","false");
         }
         return map;
     }

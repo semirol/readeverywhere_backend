@@ -39,17 +39,66 @@ public class FileSystemManager {
                 e.printStackTrace();
                 return "上传失败," + e.getMessage();
             }
+            updatePathTree(email);
             return "1";
         } else {
             return "上传失败，因为文件是空的.";
         }
     }
+    public static String deleteFileOrDir(String email,String path){
+        File file = new File(FileSystemManager.normalizePath(email,path));
+        if (!file.exists()) {  // 不存在返回 false
+            return "0";
+        } else {
+            // 判断是否为文件
+            if (file.isFile()) {  // 为文件时调用删除文件方法
+                deleteFile(file);
+            } else {  // 为目录时调用删除目录方法
+                deleteDirectory(file);
+            }
+            updatePathTree(email);
+            return "1";
+        }
+    }
+    private static boolean deleteFile(File file){
+        boolean flag = false;
+        if (file.isFile() && file.exists()) {
+            file.delete();
+            flag = true;
+        }
+        return flag;
+    }
+    private static boolean deleteDirectory(File dirFile){
+        if (!dirFile.exists() || !dirFile.isDirectory()) {
+            return false;
+        }
+        boolean flag = true;
+        //删除文件夹下的所有文件(包括子目录)
+        File[] files = dirFile.listFiles();
+        for (int i = 0; i < files.length; i++) {
+            //删除子文件
+            if (files[i].isFile()) {
+                flag = FileSystemManager.deleteFile(files[i]);
+                if (!flag) break;
+            } //删除子目录
+            else {
+                flag = deleteDirectory(files[i]);
+                if (!flag) break;
+            }
+        }
+        if (!flag) return false;
+        //删除当前目录
+        if (dirFile.delete()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     public static Object emailToPathTree(String email){
-        updatePathTree(email);
+//        updatePathTree(email);
         Jedis jedis = JedisUtils.getJedis();
         String res = jedis.hget("user:"+email,"pathTree");
         jedis.close();
-        System.out.println(res);
         return res;
     }
     public static String updatePathTree(String email){
