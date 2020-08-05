@@ -52,23 +52,24 @@ public class FileSystemManager {
         } else {
             // 判断是否为文件
             if (file.isFile()) {  // 为文件时调用删除文件方法
-                deleteFile(file);
+                deleteFile(email,file);
             } else {  // 为目录时调用删除目录方法
-                deleteDirectory(file);
+                deleteDirectory(email,file);
             }
             updatePathTree(email);
             return "1";
         }
     }
-    private static boolean deleteFile(File file){
+    private static boolean deleteFile(String email,File file){
         boolean flag = false;
         if (file.isFile() && file.exists()) {
             file.delete();
+            MySessionManager.subUsedSpace(email,file.length()/1024);
             flag = true;
         }
         return flag;
     }
-    private static boolean deleteDirectory(File dirFile){
+    private static boolean deleteDirectory(String email,File dirFile){
         if (!dirFile.exists() || !dirFile.isDirectory()) {
             return false;
         }
@@ -78,11 +79,11 @@ public class FileSystemManager {
         for (int i = 0; i < files.length; i++) {
             //删除子文件
             if (files[i].isFile()) {
-                flag = FileSystemManager.deleteFile(files[i]);
+                flag = FileSystemManager.deleteFile(email,files[i]);
                 if (!flag) break;
             } //删除子目录
             else {
-                flag = deleteDirectory(files[i]);
+                flag = deleteDirectory(email,files[i]);
                 if (!flag) break;
             }
         }
@@ -148,7 +149,16 @@ public class FileSystemManager {
             dir.mkdir();
         }
     }
-    public static int getUserSpace(String email){
-        return 1;
+//    public static int getUserSpace(String email){
+//        return 1;
+//    }
+    public static String newDir(String email,String path,String dirName){
+        File dir = new File(FileSystemManager.normalizePath(email,path+'/'+dirName));
+        if (!dir.exists()){
+            dir.mkdir();
+            updatePathTree(email);
+            return "true";
+        }
+        else return "false";
     }
 }

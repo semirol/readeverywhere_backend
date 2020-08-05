@@ -153,7 +153,6 @@ public class RequestController {
         }
         else if (password1.equals(password)){
             String token = MySessionManager.generalToken(email);
-            MySessionManager.updateLastLoginTime(email);
             map.put("status","true");
             User user = new User().setEmail(email).setName(jedisMap.get("name"))
                     .setUsedSpace(jedisMap.get("usedSpace")).setTotalSpace(jedisMap.get("totalSpace"));
@@ -248,6 +247,7 @@ public class RequestController {
             String res = FileSystemManager.saveFile(email,path,file);
             if (res.equals("1")){
                 map.put("status","true");
+                MySessionManager.addUsedSpace(email,size);
             }
             else{
                 map.put("status","false");
@@ -274,18 +274,41 @@ public class RequestController {
         }
         return map;
     }
-    @GetMapping("/test")
-    public Object test(){
-        Jedis jedis = JedisUtils.getJedis();
-        Object res = jedis.hgetAll("signUpUser:350395090@qq.com");
-        jedis.close();
-        return res;
+    @PostMapping("/newDir")
+    public Object newDir(@RequestHeader("token")String token,
+                         @RequestParam("path")String path,
+                         @RequestParam("dirName")String dirName){
+        Map<String,Object> map = new HashMap();
+        String email = MySessionManager.tokenToEmail(token);
+        if (email.equals("null")||email.equals("expired")){
+            map.put("status",email);
+            return map;
+        }
+        String res = FileSystemManager.newDir(email,path,dirName);
+        map.put("status",res);
+        return map;
     }
-    @GetMapping("/test1")
-    public Object test1(){
+    @PostMapping("/getUserInfo")
+    public Object getUserInfo(@RequestHeader("token")String token){
+        Map<String,Object> map = new HashMap();
+        String email = MySessionManager.tokenToEmail(token);
+        if (email.equals("null")||email.equals("expired")){
+            map.put("status",email);
+            return map;
+        }
         Jedis jedis = JedisUtils.getJedis();
-        Object res = jedis.hgetAll("user:350395090@qq.com");
+        Map<String,String> jedisMap = jedis.hgetAll("user:"+email);
         jedis.close();
-        return res;
+        if (jedisMap==null){
+            map.put("status","false");
+            return map;
+        }
+        else{
+            User user = new User().setEmail(email).setName(jedisMap.get("name"))
+                    .setUsedSpace(jedisMap.get("usedSpace")).setTotalSpace(jedisMap.get("totalSpace"));
+            map.put("user",user);
+            map.put("status","true");
+        }
+        return map;
     }
 }

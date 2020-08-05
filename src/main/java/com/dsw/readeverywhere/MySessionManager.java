@@ -46,6 +46,7 @@ public class MySessionManager {
         if (timeDiff<timeToRefresh){
             String email = jedis.hget("token:"+token,"email");
             jedis.close();
+            updateLastLoginTime(email);
             return email;
         }
         else if (timeDiff>timeout){
@@ -56,6 +57,7 @@ public class MySessionManager {
             jedis.hset("token:"+token,"createdTime",timeString);
             String email = jedis.hget("token:"+token,"email");
             jedis.close();
+            updateLastLoginTime(email);
             return email;
         }
     }
@@ -69,6 +71,18 @@ public class MySessionManager {
         jedis.close();
         long freeSpace = totalSpace - usedSpace;
         return freeSpace;
+    }
+    public static void addUsedSpace(String email,long size){
+        Jedis jedis = JedisUtils.getJedis();
+        long usedSpace = Long.parseLong(jedis.hget("user:"+email,"usedSpace"));
+        jedis.hset("user:"+email,"usedSpace", String.valueOf(usedSpace+size));
+        jedis.close();
+    }
+    public static void subUsedSpace(String email,long size){
+        Jedis jedis = JedisUtils.getJedis();
+        long usedSpace = Long.parseLong(jedis.hget("user:"+email,"usedSpace"));
+        jedis.hset("user:"+email,"usedSpace", String.valueOf(usedSpace-size));
+        jedis.close();
     }
 
 }
