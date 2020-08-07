@@ -2,12 +2,24 @@ package com.dsw.readeverywhere;
 
 import com.dsw.readeverywhere.model.User;
 import com.dsw.readeverywhere.utils.JedisUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 import redis.clients.jedis.Jedis;
 
+@Component
 public class MySessionManager {
-    private static final long timeToRefresh = 86400000;//1 day
-    private static final long timeout = 604800000;//7 days
+    @Value("${myConfig.MySessionManager.timeToRefresh}")
+    private long _timeToRefresh;
+    private static long timeToRefresh;
+    @Value("${myConfig.MySessionManager.timeout}")
+    private long _timeout;
+    private static long timeout;
+    public void init() {
+        timeToRefresh = this._timeToRefresh;
+        timeout = this._timeout;
+    }
     public static String generalToken(String email){
         long time = System.currentTimeMillis();
         String emailString = String.valueOf(email);

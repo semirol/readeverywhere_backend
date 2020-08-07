@@ -1,20 +1,37 @@
 package com.dsw.readeverywhere.utils;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import javax.annotation.PostConstruct;
+
+@Component
 public class JedisUtils {
     public static JedisPool jedisPool;
-    static {
-        String ip = "127.0.0.1";
+    @Value("${myConfig.redis.ip}")
+    private String _ip;
+    private static String ip;
+    @Value("${myConfig.redis.port}")
+    private int _port;
+    private static int port;
+    @Value("${myConfig.redis.password}")
+    private String _password;
+    private static String password;
+    @PostConstruct
+    public void init() {
+        ip = this._ip;
+        port = this._port;
+        password = this._password;
         JedisPoolConfig config = new JedisPoolConfig();
         config.setLifo(true);
-        jedisPool = new JedisPool(config,ip,6379);
+        jedisPool = new JedisPool(config,ip,port);
     }
     public static Jedis getJedis(){
         Jedis jedis = jedisPool.getResource();
-        jedis.auth("jlccdsw1");
+        jedis.auth(password);
         return jedis;
     }
     public static String set(String k,String v){

@@ -6,16 +6,28 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jackson.JsonComponent;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.*;
 
+@Component
 public class FileSystemManager {
-    public final static String rootPath = "D:/readeverywhereFileSystem";
+    @Value("${myConfig.FileSystemManager.rootPath}")
+    private String _rootPath;
+    private static String rootPath;
+    @PostConstruct
+    public void init() {
+        rootPath = this._rootPath;
+    }
     public static String normalizePath(String email,String path){
         String[] pathList = path.split("/");
         String res = String.join("/",Arrays.asList(pathList).subList(1,pathList.length));
