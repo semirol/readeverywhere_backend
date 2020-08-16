@@ -29,7 +29,7 @@ public class JedisUtils {
         config.setLifo(true);
         jedisPool = new JedisPool(config,ip,port);
     }
-    public static Jedis getJedis(){
+    public synchronized static Jedis getJedis(){
         Jedis jedis = jedisPool.getResource();
         jedis.auth(password);
         return jedis;

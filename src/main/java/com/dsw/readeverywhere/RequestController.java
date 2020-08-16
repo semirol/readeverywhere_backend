@@ -8,6 +8,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -33,6 +34,8 @@ import java.util.Map;
 @CrossOrigin
 @RestController
 public class RequestController {
+    @Autowired
+    private Environment env;
     @Autowired
     private JavaMailSender javaMailSender;
     private static final long activateTokenTimeOut = 60000;
@@ -111,7 +114,11 @@ public class RequestController {
                 messageHelper.setSubject("readeverywhere账户激活");
                 messageHelper.setFrom("350395090@qq.com");
                 messageHelper.setTo(email);
-                messageHelper.setText("<h1>请点击此链接完成注册:</h1><br/><a href=\"http://127.0.0.1:8080/activate?email="+email+"&activateToken="+activateToken+"\">http://127.0.0.1:8080/activate</a>", true);
+                messageHelper.setText("<h1>请点击此链接完成注册:</h1><br/><a href=\"http://"+
+                        env.getProperty("myConfig.RequestController.serverIp")+":"+
+                        env.getProperty("myConfig.RequestController.serverPort")+
+                        "activate?email="+email+"&activateToken="+activateToken+"\">"+
+                        "http://127.0.0.1:8080/activate</a>", true);
                 javaMailSender.send(messageHelper.getMimeMessage());
 
                 map.put("status","true");
@@ -310,5 +317,9 @@ public class RequestController {
             map.put("status","true");
         }
         return map;
+    }
+    @GetMapping("/hello")
+    public String hello(){
+        return "hello";
     }
 }
