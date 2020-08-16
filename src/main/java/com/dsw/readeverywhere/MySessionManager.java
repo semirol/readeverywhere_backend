@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 import redis.clients.jedis.Jedis;
 
+import javax.annotation.PostConstruct;
+
 @Component
 public class MySessionManager {
     @Value("${myConfig.MySessionManager.timeToRefresh}")
@@ -16,6 +18,7 @@ public class MySessionManager {
     @Value("${myConfig.MySessionManager.timeout}")
     private long _timeout;
     private static long timeout;
+    @PostConstruct
     public void init() {
         timeToRefresh = this._timeToRefresh;
         timeout = this._timeout;

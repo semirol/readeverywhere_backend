@@ -8,6 +8,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
@@ -39,6 +40,8 @@ public class RequestController {
     @Autowired
     private JavaMailSender javaMailSender;
     private static final long activateTokenTimeOut = 60000;
+
+
 //    private static SqlSessionFactory sqlSessionFactory;
 //    static{
 //        String resource = "mybatis-config.xml";
@@ -102,7 +105,7 @@ public class RequestController {
             if (activate!=null){
                 String signUpTimeString = jedis.hget("signUpUser:"+email,"signUpTime");
                 long signUpTime = Long.parseLong(signUpTimeString);
-                long timeStamp = time - activateTokenTimeOut;
+                long timeStamp = time - signUpTime;
                 if (timeStamp<activateTokenTimeOut){
                     map.put("status","wait");
                     return map;
@@ -117,7 +120,7 @@ public class RequestController {
                 messageHelper.setText("<h1>请点击此链接完成注册:</h1><br/><a href=\"http://"+
                         env.getProperty("myConfig.RequestController.serverIp")+":"+
                         env.getProperty("myConfig.RequestController.serverPort")+
-                        "activate?email="+email+"&activateToken="+activateToken+"\">"+
+                        "/activate?email="+email+"&activateToken="+activateToken+"\">"+
                         "http://127.0.0.1:8080/activate</a>", true);
                 javaMailSender.send(messageHelper.getMimeMessage());
 
